@@ -80,10 +80,10 @@ fn main() {
             });
 
             valid_edges.consolidate()
-                       .inspect(|x| println!("\tvalid_edges{:?}", x))
+                       //.inspect(|x| println!("\tvalid_edges{:?}", x))
                        .probe_with(&mut probe);
             valid_edges_mw.consolidate()
-                          .inspect(|x| println!("\tvalid_edges_mw: {:?}", x))
+                          //.inspect(|x| println!("\tvalid_edges_mw: {:?}", x))
                           .probe_with(&mut probe);
             (nodes_input, edges_input)
         });
@@ -91,32 +91,28 @@ fn main() {
         if index != 0 {
             nodes.close();
             edges.close();
-            worker.step_while(|| probe.less_than(&3));
+            loop{ worker.step(); }
+            //worker.step_while(|| probe.less_than(&3));
         } else {
-            /* Transaction 1: insert node 0 */
-            nodes.insert(0);
-            nodes.advance_to(1);
-            edges.advance_to(1);
-            nodes.flush();
-            edges.flush();
-            worker.step_while(|| probe.less_than(nodes.time()));
+            for i in 1..100000 {
+                nodes.insert(1);
+                nodes.insert(2);
+                edges.insert((1,2));
+                nodes.advance_to(2*i-1);
+                edges.advance_to(2*i-1);
+                nodes.flush();
+                edges.flush();
+                worker.step_while(|| probe.less_than(nodes.time()));
 
-            /* Transaction 2: Simply advance the time stamp.  This should be a no-op, but without
-             * it the bug does not show up. */
-            nodes.advance_to(2);
-            edges.advance_to(2);
-            nodes.flush();
-            edges.flush();
-            worker.step_while(|| probe.less_than(nodes.time()));
-
-            /* Transaction 3: insert node 562; insert edge 562->0 */
-            nodes.insert(562);
-            edges.insert((562,0));
-            nodes.advance_to(3);
-            edges.advance_to(3);
-            nodes.flush();
-            edges.flush();
-            worker.step_while(|| probe.less_than(nodes.time()));
+                nodes.remove(1);
+                nodes.remove(2);
+                edges.remove((1,2));
+                nodes.advance_to(2*i);
+                edges.advance_to(2*i);
+                nodes.flush();
+                edges.flush();
+                worker.step_while(|| probe.less_than(nodes.time()));
+            }
         }
     }).unwrap();
 }
