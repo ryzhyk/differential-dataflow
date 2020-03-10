@@ -210,7 +210,7 @@ where
 
     fn propose(&mut self, prefixes: &Collection<G, P, R>) -> Collection<G, (P, V), R> {
         let propose = self.indices.propose_trace.import(&prefixes.scope());
-        operators::propose::propose(prefixes, propose, self.key_selector.clone())
+        operators::propose::propose(prefixes, propose, self.key_selector.clone(), Default::default())
     }
 
     fn validate(&mut self, extensions: &Collection<G, (P, V), R>) -> Collection<G, (P, V), R> {

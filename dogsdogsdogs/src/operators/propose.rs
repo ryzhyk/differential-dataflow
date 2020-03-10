@@ -20,12 +20,13 @@ pub fn propose<G, Tr, F, P>(
     prefixes: &Collection<G, P, Tr::R>,
     arrangement: Arranged<G, Tr>,
     key_selector: F,
+    default_key: Tr::Key
 ) -> Collection<G, (P, Tr::Val), Tr::R>
 where
     G: Scope,
     G::Timestamp: Lattice,
     Tr: TraceReader<Time=G::Timestamp>+Clone+'static,
-    Tr::Key: Ord+Hashable+Default,
+    Tr::Key: Ord+Hashable+Clone,
     Tr::Val: Clone,
     Tr::Batch: BatchReader<Tr::Key, Tr::Val, Tr::Time, Tr::R>,
     Tr::Cursor: Cursor<Tr::Key, Tr::Val, Tr::Time, Tr::R>,
@@ -38,9 +39,9 @@ where
         arrangement,
         move |p: &P, k: &mut Tr::Key| { *k = key_selector(p); },
         |prefix, diff, value, sum| ((prefix.clone(), value.clone()), diff.clone() * sum.clone()),
-        Default::default(),
-        Default::default(),
-        Default::default(),
+        default_key.clone(),
+        default_key.clone(),
+        default_key.clone()
     )
 }
 
